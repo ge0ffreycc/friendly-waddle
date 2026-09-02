@@ -10,13 +10,22 @@ if (!app || typeof app !== 'object') {
   process.exit(1);
 }
 
-// 数据根目录：打包后跟随 exe，开发时跟随项目目录
-//   app.isPackaged = true  → 便携/安装版，以 process.execPath 同级为锚点
-//   app.isPackaged = false → 开发模式，以 main.js 所在目录为锚点
+// 数据根目录优先级（从高到低）：
+//   1. PORTABLE_EXECUTABLE_DIR : electron-builder portable 单文件 exe 时，NSIS 注入，指向用户双击的 SFX 所在目录
+//   2. process.execPath dirname : 普通安装版/绿色版，以 exe 同级为锚点
+//   3. __dirname                : 开发模式，以 main.js 所在目录为锚点
 const isPackaged = Boolean(app && app.isPackaged);
-const baseDir = isPackaged
-  ? path.dirname(process.execPath)
-  : __dirname;
+let baseDir;
+if (isPackaged && process.env.PORTABLE_EXECUTABLE_DIR &&
+    typeof process.env.PORTABLE_EXECUTABLE_DIR === 'string' &&
+    process.env.PORTABLE_EXECUTABLE_DIR.length > 0 &&
+    fs.existsSync(process.env.PORTABLE_EXECUTABLE_DIR)) {
+  baseDir = process.env.PORTABLE_EXECUTABLE_DIR;
+} else if (isPackaged) {
+  baseDir = path.dirname(process.execPath);
+} else {
+  baseDir = __dirname;
+}
 const userDataDir = path.join(baseDir, 'appdata');
 if (!fs.existsSync(userDataDir)) {
   try { fs.mkdirSync(userDataDir, { recursive: true }); } catch {}

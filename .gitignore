@@ -12,6 +12,9 @@ npm-debug.log*
 .vscode/
 .idea/
 
+# 打包缓存
+.cache/
+
 # 打包产物
 dist/
 out/
