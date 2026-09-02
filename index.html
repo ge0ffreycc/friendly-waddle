@@ -15,6 +15,9 @@
         <span>每日计划</span>
       </div>
       <div class="controls">
+        <button class="btn-icon" id="btnRecurring" title="每日固定任务">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M4.5 3a3.5 3.5 0 0 0-2.45 5.98.5.5 0 1 0 .7-.72A2.5 2.5 0 0 1 4.5 4H11l-1.65-1.65a.5.5 0 0 1 .7-.7L13 4.65a.5.5 0 0 1 0 .7l-2.95 3a.5.5 0 0 1-.7-.7L11 6H4.5zM11.5 13a3.5 3.5 0 0 0 2.45-5.98.5.5 0 1 0-.7.72A2.5 2.5 0 0 1 11.5 10H5l1.65 1.65a.5.5 0 0 1-.7.7L3 11.35a.5.5 0 0 1 0-.7l2.95-3a.5.5 0 0 1 .7.7L5 10h6.5z"/></svg>
+        </button>
         <button class="btn-icon" id="btnPin" title="置顶/取消置顶">
           <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M9.8 1.2 8.3 2.7l3.5 3.5 1.5-1.5a.6.6 0 0 0 0-.85L10.65 1.2a.6.6 0 0 0-.85 0Zm-2.4 2.4L2.7 8.3a.6.6 0 0 0 .1.95l1.45.85 1.7-1.7 4 4-1.7 1.7.85 1.45a.6.6 0 0 0 .95.1l4.7-4.7L8.6 3.6Z"/></svg>
         </button>
@@ -46,6 +49,28 @@
     <footer class="footer">
       <span>拖到桌面边缘自动缩进 · 鼠标悬停可见条展开</span>
     </footer>
+  </div>
+
+  <!-- 每日固定任务管理面板 -->
+  <div class="recurring-overlay" id="recurringOverlay" hidden>
+    <div class="recurring-panel" id="recurringPanel">
+      <header class="recurring-head">
+        <div class="recurring-title">每日固定任务</div>
+        <button class="btn-icon" id="recurringClose" title="关闭">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3.7 3.1 8 7.4l4.3-4.3.7.7L8.7 8l4.3 4.3-.7.7L8 8.6 3.6 13l-.7-.7L7.4 8 2.9 3.7z"/></svg>
+        </button>
+      </header>
+      <div class="recurring-hint">每天打开应用时，会自动把下面这些任务追加到今日计划</div>
+      <section class="recurring-add-row">
+        <input id="recurringInput" class="input" type="text" placeholder="添加一项固定任务，回车确认…" maxlength="80" />
+        <button class="btn-add" id="recurringAdd" title="添加">+</button>
+      </section>
+      <ul class="recurring-list" id="recurringList"></ul>
+      <div class="recurring-empty" id="recurringEmpty" hidden>
+        <div class="empty-icon">↻</div>
+        <div>还没有固定任务，添加一条试试</div>
+      </div>
+    </div>
   </div>
 
   <script src="renderer.js"></script>

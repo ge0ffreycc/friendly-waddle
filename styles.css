@@ -12,6 +12,8 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* 确保 hidden 属性优先级高于 display:flex 等显式声明 */
+[hidden] { display: none !important; }
 
 html, body {
   height: 100%;
@@ -284,4 +286,121 @@ body {
   color: var(--sub);
   text-align: center;
   border-top: 1px solid var(--stroke);
+}
+
+/* 固定任务标签（应用到今日的实例） */
+.task .recurring-tag {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(96, 205, 255, 0.18), rgba(74, 159, 214, 0.12));
+  color: var(--accent);
+  border: 1px solid rgba(96, 205, 255, 0.28);
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+.task.done .recurring-tag {
+  opacity: 0.55;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sub);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* 标题栏固定任务按钮 active 状态 */
+.btn-icon#btnRecurring.active,
+.btn-icon#btnRecurring:hover { color: var(--accent); }
+
+/* ===== 每日固定任务管理面板 ===== */
+.recurring-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: recur-fade 0.15s ease;
+}
+.recurring-overlay[hidden] { display: none; }
+@keyframes recur-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.recurring-panel {
+  width: 300px;
+  max-width: 92%;
+  max-height: 80%;
+  background: var(--bg-solid);
+  border: 1px solid var(--stroke);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: recur-pop 0.16s ease;
+}
+@keyframes recur-pop {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.recurring-head {
+  height: 42px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6px 0 14px;
+  border-bottom: 1px solid var(--stroke);
+}
+.recurring-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+.recurring-hint {
+  padding: 8px 14px 6px;
+  font-size: 11px;
+  color: var(--sub);
+  line-height: 1.5;
+}
+.recurring-add-row {
+  display: flex;
+  gap: 8px;
+  padding: 0 14px 10px;
+}
+.recurring-list {
+  list-style: none;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 0 8px 8px;
+  padding: 0 6px;
+}
+.recurring-list::-webkit-scrollbar { width: 6px; }
+.recurring-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+
+.recurring-list .task {
+  margin-bottom: 6px;
+}
+.recurring-list .del { opacity: 1; }
+
+.recurring-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--sub);
+  font-size: 12px;
+  text-align: center;
+  padding: 24px 20px 18px;
+}
+.recurring-empty .empty-icon {
+  font-size: 26px;
+  color: var(--accent);
+  opacity: 0.7;
 }
