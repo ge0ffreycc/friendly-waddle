@@ -1,0 +1,15 @@
+{
+  "name": "desTop-plan-app",
+  "version": "1.0.0",
+  "description": "Win11 轻量级每日计划桌面应用，靠近桌面边缘可缩进",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}

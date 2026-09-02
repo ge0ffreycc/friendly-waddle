@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>每日计划</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="card" id="card">
+    <!-- 自定义标题栏 -->
+    <header class="titlebar" id="titlebar">
+      <div class="brand">
+        <span class="dot"></span>
+        <span>每日计划</span>
+      </div>
+      <div class="controls">
+        <button class="btn-icon" id="btnPin" title="置顶/取消置顶">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M9.8 1.2 8.3 2.7l3.5 3.5 1.5-1.5a.6.6 0 0 0 0-.85L10.65 1.2a.6.6 0 0 0-.85 0Zm-2.4 2.4L2.7 8.3a.6.6 0 0 0 .1.95l1.45.85 1.7-1.7 4 4-1.7 1.7.85 1.45a.6.6 0 0 0 .95.1l4.7-4.7L8.6 3.6Z"/></svg>
+        </button>
+        <button class="btn-icon" id="btnClose" title="关闭">
+          <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M3.7 3.1 8 7.4l4.3-4.3.7.7L8.7 8l4.3 4.3-.7.7L8 8.6 3.6 13l-.7-.7L7.4 8 2.9 3.7z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="body">
+      <section class="date-row">
+        <div class="date-label" id="dateLabel">—</div>
+        <div class="progress" id="progress">0 / 0</div>
+      </section>
+
+      <section class="add-row">
+        <input id="taskInput" class="input" type="text" placeholder="添加一项今日计划，回车确认…" maxlength="80" />
+        <button class="btn-add" id="btnAdd" title="添加">+</button>
+      </section>
+
+      <ul class="task-list" id="taskList"></ul>
+
+      <div class="empty" id="empty" hidden>
+        <div class="empty-icon">✶</div>
+        <div>今天还没有计划，先添加一条吧</div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>拖到桌面边缘自动缩进 · 鼠标悬停可见条展开</span>
+    </footer>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>
