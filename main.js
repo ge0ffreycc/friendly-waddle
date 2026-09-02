@@ -1,4 +1,4 @@
-const { app, BrowserWindow, screen, ipcMain, shell } = require('electron');
+const electron = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -10,15 +10,31 @@ function log(...args) {
   } catch {}
 }
 
+// 安全检查：防止用 node 直接运行导致 electron API 不可用
+const { app, BrowserWindow, screen, ipcMain, shell } = electron;
+if (!app || typeof app !== 'object') {
+  console.error('[错误] 请使用 Electron 启动本应用，而不是直接用 Node.js 运行。');
+  console.error('  正确方式：双击 启动.bat  或运行  npm start');
+  process.exit(1);
+}
+
 // 兼容沙箱/权限受限环境：禁用 GPU 沙箱、使用本地 userData
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-software-rasterizer');
-app.commandLine.appendSwitch('no-sandbox');
+try {
+  if (app.commandLine && typeof app.commandLine.appendSwitch === 'function') {
+    app.commandLine.appendSwitch('disable-gpu');
+    app.commandLine.appendSwitch('disable-software-rasterizer');
+    app.commandLine.appendSwitch('no-sandbox');
+  }
+} catch (e) {
+  log('commandLine appendSwitch failed', e.message);
+}
 try {
   const userDataDir = path.join(__dirname, 'appdata');
   if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
-  app.setPath('userData', userDataDir);
-  log('userData set to', userDataDir);
+  if (typeof app.setPath === 'function') {
+    app.setPath('userData', userDataDir);
+    log('userData set to', userDataDir);
+  }
 } catch (e) {
   log('userData set failed', e.message);
 }
