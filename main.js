@@ -2,20 +2,32 @@ const electron = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-// 调试日志写入文件
-const DEBUG_LOG = path.join(__dirname, 'app-debug.log');
-function log(...args) {
-  try {
-    fs.appendFileSync(DEBUG_LOG, '[' + new Date().toISOString() + '] ' + args.join(' ') + '\n');
-  } catch {}
-}
-
 // 安全检查：防止用 node 直接运行导致 electron API 不可用
 const { app, BrowserWindow, screen, ipcMain, shell } = electron;
 if (!app || typeof app !== 'object') {
   console.error('[错误] 请使用 Electron 启动本应用，而不是直接用 Node.js 运行。');
   console.error('  正确方式：双击 启动.bat  或运行  npm start');
   process.exit(1);
+}
+
+// 数据根目录：打包后跟随 exe，开发时跟随项目目录
+//   app.isPackaged = true  → 便携/安装版，以 process.execPath 同级为锚点
+//   app.isPackaged = false → 开发模式，以 main.js 所在目录为锚点
+const isPackaged = Boolean(app && app.isPackaged);
+const baseDir = isPackaged
+  ? path.dirname(process.execPath)
+  : __dirname;
+const userDataDir = path.join(baseDir, 'appdata');
+if (!fs.existsSync(userDataDir)) {
+  try { fs.mkdirSync(userDataDir, { recursive: true }); } catch {}
+}
+
+// 调试日志写入文件（和 userData 同目录便于排查）
+const DEBUG_LOG = path.join(userDataDir, 'app-debug.log');
+function log(...args) {
+  try {
+    fs.appendFileSync(DEBUG_LOG, '[' + new Date().toISOString() + '] ' + args.join(' ') + '\n');
+  } catch {}
 }
 
 // 兼容沙箱/权限受限环境：禁用 GPU 沙箱、使用本地 userData
@@ -29,11 +41,9 @@ try {
   log('commandLine appendSwitch failed', e.message);
 }
 try {
-  const userDataDir = path.join(__dirname, 'appdata');
-  if (!fs.existsSync(userDataDir)) fs.mkdirSync(userDataDir, { recursive: true });
   if (typeof app.setPath === 'function') {
     app.setPath('userData', userDataDir);
-    log('userData set to', userDataDir);
+    log('userData set to', userDataDir, '(isPackaged=' + isPackaged + ')');
   }
 } catch (e) {
   log('userData set failed', e.message);
