@@ -29,7 +29,15 @@
 
     <main class="body">
       <section class="date-row">
-        <div class="date-label" id="dateLabel">—</div>
+        <button class="date-nav" id="datePrev" title="前一天">
+          <svg viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M10.5 3.5 6 8l4.5 4.5.7-.7L7.4 8 11.2 4.2z"/></svg>
+        </button>
+        <div class="date-label" id="dateLabel" title="点击选择日期">—</div>
+        <button class="date-nav" id="dateNext" title="后一天">
+          <svg viewBox="0 0 16 16" width="10" height="10"><path fill="currentColor" d="M5.5 3.5 10 8l-4.5 4.5-.7-.7L8.6 8 4.8 4.2z"/></svg>
+        </button>
+        <input type="date" id="datePicker" hidden />
+        <button class="date-today" id="dateToday" title="回到今天" hidden>今天</button>
         <div class="progress" id="progress">0 / 0</div>
       </section>
 

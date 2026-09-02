@@ -19,6 +19,10 @@ const recurringInput = document.getElementById('recurringInput');
 const recurringAdd = document.getElementById('recurringAdd');
 const recurringClose = document.getElementById('recurringClose');
 const recurringEmpty = document.getElementById('recurringEmpty');
+const datePrev = document.getElementById('datePrev');
+const dateNext = document.getElementById('dateNext');
+const datePicker = document.getElementById('datePicker');
+const dateToday = document.getElementById('dateToday');
 
 // 当前选中日期，默认今天
 let selectedDate = todayKey();
@@ -180,6 +184,8 @@ function applyRecurringToday() {
 // 渲染
 function render() {
   dateLabel.textContent = formatDateLabel(selectedDate);
+  // 非今天时显示"回到今天"按钮
+  dateToday.hidden = (selectedDate === todayKey());
   const tasks = getTasks(selectedDate);
   taskList.innerHTML = '';
 
@@ -479,6 +485,35 @@ recurringAdd.addEventListener('click', () => {
 recurringInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') { addRecurring(recurringInput.value); recurringInput.value = ''; }
   if (e.key === 'Escape') { closeRecurringPanel(); }
+});
+
+// ===== 日期切换 =====
+function goPrev() { selectedDate = prevKey(selectedDate); render(); }
+function goNext() { selectedDate = nextKey(selectedDate); render(); }
+function goToday() { selectedDate = todayKey(); render(); }
+
+datePrev.addEventListener('click', goPrev);
+dateNext.addEventListener('click', goNext);
+dateToday.addEventListener('click', goToday);
+// 点击日期标签 → 弹出原生日期选择器
+dateLabel.addEventListener('click', () => {
+  datePicker.value = selectedDate;
+  datePicker.showPicker();
+});
+datePicker.addEventListener('change', () => {
+  if (datePicker.value) {
+    selectedDate = datePicker.value;
+    render();
+  }
+});
+
+// 键盘左右箭头切换日期
+document.addEventListener('keydown', (e) => {
+  // 输入框/面板打开时不拦截
+  if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) return;
+  if (e.key === 'ArrowLeft') goPrev();
+  else if (e.key === 'ArrowRight') goNext();
+  else if (e.key === 'ArrowUp' || e.key.toLowerCase() === 't') goToday();
 });
 
 // 初始渲染
