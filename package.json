@@ -27,9 +27,12 @@
       "index.html",
       "styles.css",
       "renderer.js",
+      "icon/icon.png",
+      "icon.ico",
       "package.json"
     ],
     "win": {
+      "icon": "icon.ico",
       "target": [
         {
           "target": "portable",

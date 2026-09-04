@@ -3,12 +3,22 @@ const path = require('path');
 const fs = require('fs');
 
 // 安全检查：防止用 node 直接运行导致 electron API 不可用
-const { app, BrowserWindow, screen, ipcMain, shell } = electron;
+const { app, BrowserWindow, screen, ipcMain, shell, Tray, Menu, nativeImage } = electron;
 if (!app || typeof app !== 'object') {
   console.error('[错误] 请使用 Electron 启动本应用，而不是直接用 Node.js 运行。');
   console.error('  正确方式：双击 启动.bat  或运行  npm start');
   process.exit(1);
 }
+
+// 单实例锁：重复启动时聚焦已有窗口，避免托盘出现多个图标
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  try { app.quit(); } catch (_) {}
+  process.exit(0);
+}
+app.on('second-instance', () => {
+  showWindow();
+});
 
 // 数据根目录优先级（从高到低）：
 //   1. PORTABLE_EXECUTABLE_DIR : electron-builder portable 单文件 exe 时，NSIS 注入，指向用户双击的 SFX 所在目录
@@ -74,6 +84,8 @@ const HOVER_MARGIN = 18;           // 展开后命中测试向外扩展像素（
 const SLIDEIN_COOLDOWN = 400;      // 展开后至少保持多久才允许再次缩进
 
 let win = null;
+let tray = null;
+let isQuitting = false;
 let isDocked = false;              // 是否已缩进
 let dockSide = null;               // 'left' | 'right' | 'top'
 let hideTimer = null;
@@ -99,7 +111,8 @@ function createWindow() {
     fullscreenable: false,
     minimizable: false,
     alwaysOnTop: true,
-    skipTaskbar: false,
+    skipTaskbar: true,
+    icon: path.join(__dirname, 'icon.ico'),
     backgroundColor: '#00000000',
     hasShadow: false,
     webPreferences: {
@@ -113,6 +126,13 @@ function createWindow() {
   win.once('ready-to-show', () => log('window ready-to-show'));
   win.webContents.on('did-finish-load', () => log('webcontents did-finish-load'));
   win.webContents.on('console-message', (e, level, msg) => log('renderer console:', msg));
+  // 拦截关闭：非真正退出时隐藏到托盘，避免误关
+  win.on('close', (e) => {
+    if (!isQuitting) {
+      e.preventDefault();
+      if (win && !win.isDestroyed()) win.hide();
+    }
+  });
   win.on('closed', () => log('window closed'));
 
   if (process.argv.includes('--dev')) {
@@ -297,6 +317,7 @@ function pointInRectWithMargin(pt, b, margin) {
 // 轮询鼠标：缩进状态下，鼠标进入可见条则展开
 function pollCursor() {
   if (!win || win.isDestroyed()) return;
+  if (!win.isVisible()) return; // 隐藏到托盘时不轮询
   if (animating) return;
   const pt = screen.getCursorScreenPoint();
   const b = win.getBounds();
@@ -342,9 +363,14 @@ ipcMain.on('win:drag', () => {
   }
 });
 
-// IPC: 关闭
+// IPC: 关闭（隐藏到托盘，不退出）
 ipcMain.on('win:close', () => {
-  if (win && !win.isDestroyed()) win.close();
+  if (win && !win.isDestroyed()) win.hide();
+});
+
+// IPC: 显示窗口（预留，托盘可调用）
+ipcMain.on('win:show', () => {
+  showWindow();
 });
 
 // IPC: 切换置顶
@@ -354,10 +380,55 @@ ipcMain.on('win:toggle-top', () => {
   }
 });
 
+// 显示并聚焦窗口
+function showWindow() {
+  if (!win || win.isDestroyed()) return;
+  if (!win.isVisible()) win.show();
+  if (win.isMinimized()) win.restore();
+  win.focus();
+}
+
+// 创建系统托盘
+function createTray() {
+  const pngPath = path.join(__dirname, 'icon', 'icon.png');
+  const icoPath = path.join(__dirname, 'icon.ico');
+  let icon;
+  try {
+    if (fs.existsSync(pngPath)) {
+      icon = nativeImage.createFromPath(pngPath);
+    } else if (fs.existsSync(icoPath)) {
+      icon = nativeImage.createFromPath(icoPath);
+    }
+  } catch (e) { log('tray icon load failed', e.message); }
+  if (!icon || icon.isEmpty()) {
+    icon = nativeImage.createEmpty();
+    log('tray icon empty, using blank');
+  }
+
+  tray = new Tray(icon);
+  tray.setToolTip('每日计划');
+
+  const contextMenu = Menu.buildFromTemplate([
+    { label: '显示窗口', click: () => showWindow() },
+    { label: '隐藏窗口', click: () => { if (win && !win.isDestroyed()) win.hide(); } },
+    { type: 'separator' },
+    { label: '退出', click: () => { isQuitting = true; app.quit(); } }
+  ]);
+  tray.setContextMenu(contextMenu);
+
+  // 单击托盘图标切换显示/隐藏
+  tray.on('click', () => {
+    if (!win || win.isDestroyed()) return;
+    if (win.isVisible() && win.isFocused()) win.hide();
+    else showWindow();
+  });
+}
+
 app.whenReady().then(() => {
   log('app ready, creating window');
   try {
     createWindow();
+    createTray();
     log('createWindow returned, windows:', BrowserWindow.getAllWindows().length);
   } catch (e) {
     log('createWindow threw', e.stack);
@@ -365,8 +436,14 @@ app.whenReady().then(() => {
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    else showWindow();
   });
 }).catch(e => log('whenReady error', e.stack));
+
+app.on('before-quit', () => {
+  isQuitting = true;
+  if (tray) { try { tray.destroy(); } catch (_) {} tray = null; }
+});
 
 app.on('window-all-closed', () => {
   if (pollTimer) clearInterval(pollTimer);
