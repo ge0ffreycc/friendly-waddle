@@ -32,6 +32,24 @@ migrateUnfinishedTasks();
 // 2) 应用每日固定任务到今天（首次当天打开时追加，不重复）
 applyRecurringToday();
 
+// 3) 跨天检测：应用持续运行跨过午夜时，自动迁移昨日未完成、应用今日固定任务、刷新视图
+let currentDayKey = todayKey();
+setInterval(checkDayRollover, 30000); // 每 30 秒检测一次
+
+function checkDayRollover() {
+  const newToday = todayKey();
+  if (newToday === currentDayKey) return; // 还在同一天
+  // 跨天了
+  const oldToday = currentDayKey;
+  currentDayKey = newToday;
+  // 迁移昨日（及更早）未完成任务到今天，并应用今日固定任务
+  migrateUnfinishedTasks();
+  applyRecurringToday();
+  // 若用户当时正停留在“今天”（即 selectedDate 还是旧的今天），则跟随切换到新今天
+  if (selectedDate === oldToday) selectedDate = newToday;
+  render();
+}
+
 function todayKey() {
   const d = new Date();
   const y = d.getFullYear();
